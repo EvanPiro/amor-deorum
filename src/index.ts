@@ -16,7 +16,7 @@ export interface Env {
 }
 
 const works = [
-	'The New Testament of the King James Bible',
+	'The Gospels of the New Testament of the King James Bible',
 	'The Old Testament of the King James Bible',
 	"Edward Gibbon's The History of the Decline and Fall of the Roman Empire",
 	'The Poetic Edda',
@@ -34,7 +34,7 @@ enum Medium {
 	Mosaic = 'mosaic',
 	Fresco = 'fresco',
 	Sculpture = 'sculpture',
-	Tapastry = 'tapastry',
+	Tapastry = 'tapestry',
 	IlluminatedManuscript = 'illuminated manuscript',
 }
 
