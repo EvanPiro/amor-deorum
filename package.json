@@ -9,12 +9,14 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240117.0",
+    "@types/xml2js": "^0.4.14",
     "typescript": "^5.0.4",
     "wrangler": "^3.0.0"
   },
   "dependencies": {
     "@langchain/community": "^0.0.21",
     "@langchain/openai": "^0.0.13",
+    "@types/crypto-js": "^4.2.2",
     "axios": "^1.6.7",
     "axios-oauth-1.0a": "^0.3.6",
     "crypto-js": "^4.2.0",
@@ -23,6 +25,7 @@
     "fp-ts": "^2.16.2",
     "node-fetch": "^3.3.2",
     "oauth-1.0a": "^2.2.6",
+    "xml2js": "^0.6.2",
     "zod": "^3.22.4"
   }
 }

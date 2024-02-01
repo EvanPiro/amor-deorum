@@ -11,4 +11,4 @@ node_compat = true
 
 
 [triggers]
-crons = ["*/30 * * * *"]
+crons = ["0 * * * *"]
