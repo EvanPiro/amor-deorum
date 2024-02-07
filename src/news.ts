@@ -11,12 +11,11 @@ export const fetchGoogleNewsHeadlines = (): TaskEither<string, string[]> =>
 
 			// Parse XML to JSON
 			const result = await parseStringPromise(body);
-			console.log('result', result);
 			const items = result.rss.channel[0].item;
 
 			// Reduce to a list of headlines
 			const headlines = items.map((item: any) => item.title[0]);
-			console.log('headlines', headlines);
+
 			return headlines;
 		},
 		(error) => {

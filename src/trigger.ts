@@ -54,9 +54,8 @@ const getPrompt =
   (expertise: string): TaskEither<any, string> =>
     te.tryCatch(
       async () => {
-        const template = `You are a history expert who comes up with historic art prompt from a part of ${expertise}. The prompt should be able to fit in a tweet. Here are some examples. Your prompt should be similar to structure, content, and length as the following examples:
-
-${captions.join("\n")}`;
+        const template = `You are a history expert who comes up with historic art prompt from a part of ${expertise}.
+        The prompt should be able to fit in a tweet. Here are some examples.`;
 
         const humanTemplate = "{text}";
 

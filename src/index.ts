@@ -42,7 +42,12 @@ export interface Env {
 const works = [
 	'Lives of the Most Excellent Painters, Sculptors, and Architects by Giorgio Vasari',
 	'History of the Conquest of Mexico by William H. Prescott',
-
+	'A History of Finland by Henrik Meinander',
+	'A History of Nigeria by Toyin Falola',
+	'Beautiful Crescent: A History of New Orleans by Joan B. Garvey',
+	`The History of Ethiopia by Saheed A. Adejumobi`,
+	`Brazil: A Biography by Lilia M. Schwarcz and Heloisa M. Starling`,
+	`Russia's Arctic Seas: Navigation, Trade, and Exploration in Russia's North (4th Century to the Present)`
 ];
 
 enum Medium {
@@ -62,12 +67,10 @@ const buildArtPrompt =
 const getArtPrompt =
 	(openAIApiKey: string) =>
 	(expertise: string): TaskEither<any, string> =>
-		sendPrompt(openAIApiKey)(`You are a history expert who comes up with historic art prompt from a part of ${expertise}.
-		The prompt should be able to fit in a tweet, under 280 characters. Please include the year in parentheses at the end of the prompt.
-		You respond with the prompt and the prompt only.
-		Here are some examples. Your prompt should be similar to structure, content, and length as the following examples:
-
-${captions.join('\n')}`)('Can you write me 1 prompt?');
+		sendPrompt(openAIApiKey)(`You are a history expert who comes up with a historic anecdote part of ${expertise}.
+		The prompt should be able to fit in a tweet, under 280 characters. Please include the year in parentheses at the end of the anecdote.
+		The anecdote should have a structure like "Character doing something as a results of something"
+		You respond with the prompt and the prompt only.`)('Can you write me 1 prompt?');
 
 const summarizeNews =
 	(openAIApiKey: string) =>
@@ -79,14 +82,14 @@ const summarizeNews =
 const modernizeArtPrompt =
 	(openAIApiKey: string) =>
 	(history: string) =>
-	(news): TaskEither<any, string> =>
+	(news: string): TaskEither<any, string> =>
 		sendPrompt(
 			openAIApiKey
 		)(`You are an artist that creates art that juxtaposes a moment in ancient history over a backdrop of a modern landscape composed of symbols, cultural references, memes, and pop culture.
 		More specifically, you take the below paragraph which describes a historic moment along with a paragraph that summarizes current events provided by the end user.
 		You then merge the two together to produce a paragraph describing the moment in ancient history but with modern embellishments.
 		Ensure your cultural references are blatant, hyper modern, pop-art adjacent.
-		Try to include a slice of pizza, bowl of buffalo wings, american football, guitars, sunglasses, potato chips, microsoft computers, expensive handbags, military grade weapons, large cartoony shoes like Big Red Shoes and Balenciaga, the cereal Fruit Loops, american cash money, grubhub and seamless delivery cyclists who wear face coverings, amazon prime delivery trucks and drivers, or something hyper American.
+		Try to include a iphones, gucci, prada, military grade weapons, Balenciaga, the cereal Fruit Loops, american cash money, grubhub and seamless delivery cyclists who wear face coverings, amazon prime delivery trucks and drivers, or something hyper American.
 		Also try to include references to Gen Z fashion, such as baggy pants, camo, low rising jeans, and a liking for 90s and 2000s pop culture like grunge and Nu Meta music.
 		Also try to throw in a reference to the video game series Metal Gear Solid and the game Death Stranding.
 		Please give the historic figure represented in the prompt a likeness with a famous person mentioned in the modern news summary.
@@ -111,7 +114,7 @@ const summarizeArtPrompt =
 	(openAIApiKey: string) =>
 	(prompt: string): TaskEither<any, string> =>
 		sendPrompt(openAIApiKey)(
-			`You are responsible for taking a prompt provided by an artist and simplifying it into a prompt for DALL-E image generation`
+			`You are responsible for taking a prompt provided by an artist and simplifying it into a prompt for DALL-E image generation instructing it to generate a ${randomMedium()}. Please retain the gender and ethnicity of the persons being represented`
 		)(prompt);
 
 const sendPrompt =
@@ -154,7 +157,7 @@ const randomMember = (list: string[]): any => {
 };
 
 export default {
-	async scheduled(event: any, env: Env, ctx): Promise<Response> {
+	async fetch(event: any, env: Env, ctx: any): Promise<Response> {
 		const OPENAI_API_KEY: any = env.OPENAI_API_KEY;
 		const consumerKey: any = env.TWITTER_CONSUMER_KEY;
 		const consumerSecret: any = env.TWITTER_CONSUMER_SECRET;
@@ -185,8 +188,8 @@ export default {
 					te.chain(summarizeArtPrompt(OPENAI_API_KEY)),
 					te.chain((artPrompt) =>
 						pipe(
-							te.of(buildArtPrompt(randomMedium())(artPrompt)),
-							te.chain(genImage(OPENAI_API_KEY)),
+							// te.of(buildArtPrompt(randomMedium())(artPrompt)),
+							genImage(OPENAI_API_KEY)(artPrompt),
 							te.chain((imgUrl) =>
 								pipe(
 									addHashTags(OPENAI_API_KEY)(artPrompt)(caption),
