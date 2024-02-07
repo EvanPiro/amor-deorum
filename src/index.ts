@@ -40,13 +40,9 @@ export interface Env {
 // ];
 
 const works = [
-	'The Old Regime and the Revolution by Alexis de Tocqueville',
-	'Petersburg by Andrei Bely',
 	'Lives of the Most Excellent Painters, Sculptors, and Architects by Giorgio Vasari',
-	'Parallel Lives by Plutarch',
-	'The Nibelungenlied',
-	'King Arthur and His Knights of the Round Table',
-	'Canebury Tales by Geoffrey Chaucer',
+	'History of the Conquest of Mexico by William H. Prescott',
+
 ];
 
 enum Medium {
