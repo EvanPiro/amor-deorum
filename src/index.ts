@@ -5,7 +5,6 @@ import { genImage } from './image';
 import { ITwitterConfig, sendTweet } from './twitter';
 import { ChatOpenAI, OpenAI } from '@langchain/openai';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
-import { captions } from './captions';
 import { fetchGoogleNewsHeadlines } from './news';
 import { task } from 'fp-ts';
 
@@ -41,13 +40,18 @@ export interface Env {
 
 const works = [
 	'Lives of the Most Excellent Painters, Sculptors, and Architects by Giorgio Vasari',
-	'History of the Conquest of Mexico by William H. Prescott',
 	'A History of Finland by Henrik Meinander',
 	'A History of Nigeria by Toyin Falola',
 	'Beautiful Crescent: A History of New Orleans by Joan B. Garvey',
 	`The History of Ethiopia by Saheed A. Adejumobi`,
 	`Brazil: A Biography by Lilia M. Schwarcz and Heloisa M. Starling`,
-	`Russia's Arctic Seas: Navigation, Trade, and Exploration in Russia's North (4th Century to the Present)`
+	`Russia's Arctic Seas: Navigation, Trade, and Exploration in Russia's North (4th Century to the Present)`,
+	`Antarctica: An Intimate Portrait of a Mysterious Continent by Gabrielle Walker`,
+	`A History of Malaysia by Barbara Watson Andaya and Leonard Y. Andaya`,
+	`The Oxford Handbook of Martin Luther's Theology`,
+	`Fashion: The Definitive History of Costume and Style by DK Publishing`,
+	`Salt: A World History by Mark Kurlansky`,
+	`The Course of Irish History by T.W. Moody and F.X. Martin`,
 ];
 
 enum Medium {
@@ -76,7 +80,7 @@ const summarizeNews =
 	(openAIApiKey: string) =>
 	(news: string[]): TaskEither<any, string> =>
 		sendPrompt(openAIApiKey)(
-			`You are a news editor who is responsible for merging a list of headlines into a single paragraph summarizing what is currently happening in the world`
+			`You are a news editor who is responsible for merging a list of headlines into a single paragraph summarizing what is currently happening in the world`,
 		)(news.join('\n'));
 
 const modernizeArtPrompt =
@@ -84,12 +88,21 @@ const modernizeArtPrompt =
 	(history: string) =>
 	(news: string): TaskEither<any, string> =>
 		sendPrompt(
-			openAIApiKey
+			openAIApiKey,
 		)(`You are an artist that creates art that juxtaposes a moment in ancient history over a backdrop of a modern landscape composed of symbols, cultural references, memes, and pop culture.
 		More specifically, you take the below paragraph which describes a historic moment along with a paragraph that summarizes current events provided by the end user.
 		You then merge the two together to produce a paragraph describing the moment in ancient history but with modern embellishments.
 		Ensure your cultural references are blatant, hyper modern, pop-art adjacent.
-		Try to include a iphones, gucci, prada, military grade weapons, Balenciaga, the cereal Fruit Loops, american cash money, grubhub and seamless delivery cyclists who wear face coverings, amazon prime delivery trucks and drivers, or something hyper American.
+		Try to include the following
+			- iphones
+			- gucci
+			- prada
+			- military grade weapons
+			- Balenciaga, the cereal Fruit Loops
+			- american cash money
+			- grubhub and seamless delivery cyclists who wear face coverings
+			- amazon prime delivery trucks and drivers
+			- something hyper American.
 		Also try to include references to Gen Z fashion, such as baggy pants, camo, low rising jeans, and a liking for 90s and 2000s pop culture like grunge and Nu Meta music.
 		Also try to throw in a reference to the video game series Metal Gear Solid and the game Death Stranding.
 		Please give the historic figure represented in the prompt a likeness with a famous person mentioned in the modern news summary.
@@ -102,19 +115,19 @@ const addHashTags =
 	(context: string) =>
 	(tweetText: string): TaskEither<any, string> =>
 		sendPrompt(openAIApiKey)(
-			`You are responsible for adding hash tags to a tweet based on the below provided context.
+			`You are responsible for adding 3 hash tags to a tweet based on the below provided context.
 			More specifically, the hashtags should describe the moment in history but also have tags which reference the provided context of current events.
 			Please return just the provided tweet with hash tags at the end. Do not modify the actual provided text.
 
 			Here is the context:
-${context}`
+${context}`,
 		)(tweetText);
 
 const summarizeArtPrompt =
 	(openAIApiKey: string) =>
 	(prompt: string): TaskEither<any, string> =>
 		sendPrompt(openAIApiKey)(
-			`You are responsible for taking a prompt provided by an artist and simplifying it into a prompt for DALL-E image generation instructing it to generate a ${randomMedium()}. Please retain the gender and ethnicity of the persons being represented`
+			`You are responsible for taking a prompt provided by an artist and simplifying it into a prompt for DALL-E image generation instructing it to generate a ${randomMedium()}. Please retain the gender and ethnicity of the persons being represented`,
 		)(prompt);
 
 const sendPrompt =
@@ -146,7 +159,7 @@ const sendPrompt =
 			},
 			(err: any) => {
 				return err;
-			}
+			},
 		);
 
 const randomMedium = (): Medium =>
@@ -156,8 +169,15 @@ const randomMember = (list: string[]): any => {
 	return list[Math.floor(Math.random() * list.length)];
 };
 
+export const abbreviate =
+	(openAIApiKey: string) =>
+	(tweet: string): TaskEither<any, string> =>
+		sendPrompt(openAIApiKey)(
+			`You are responsible for taking a tweet that is over 280 characters and abbreviating it so that it is less than 280 characters`,
+		)(tweet);
+
 export default {
-	async fetch(event: any, env: Env, ctx: any): Promise<Response> {
+	async scheduled(event: any, env: Env, ctx: any): Promise<Response> {
 		const OPENAI_API_KEY: any = env.OPENAI_API_KEY;
 		const consumerKey: any = env.TWITTER_CONSUMER_KEY;
 		const consumerSecret: any = env.TWITTER_CONSUMER_SECRET;
@@ -193,12 +213,14 @@ export default {
 							te.chain((imgUrl) =>
 								pipe(
 									addHashTags(OPENAI_API_KEY)(artPrompt)(caption),
-									te.chain((tweetText) => sendTweet(twitter)(tweetText)(imgUrl))
-								)
-							)
-						)
-					)
-				)
+									te.chain((tweet) => (tweet.length <= 280 ? te.of(tweet) : abbreviate(OPENAI_API_KEY)(tweet))),
+									te.chain((tweet) => (tweet.length <= 280 ? te.of(tweet) : abbreviate(OPENAI_API_KEY)(tweet))),
+									te.chain((tweetText) => sendTweet(twitter)(tweetText)(imgUrl)),
+								),
+							),
+						),
+					),
+				),
 			),
 			te.fold(
 				(err) => {
@@ -207,8 +229,8 @@ export default {
 
 					return task.of(new Response('Tweet Sent!', { status: 500 }));
 				},
-				(val) => task.of(new Response('Tweet Sent!'))
-			)
+				(val) => task.of(new Response('Tweet Sent!')),
+			),
 		)();
 	},
 };
