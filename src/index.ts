@@ -61,6 +61,7 @@ enum Medium {
 	IlluminatedManuscript = 'illuminated manuscript',
 	ReliefSculpture = 'relief sculpture',
 	OilPainting = 'oil painting',
+	VasePainting = 'vase painting'
 }
 
 const buildArtPrompt =
